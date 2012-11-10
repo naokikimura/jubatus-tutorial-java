@@ -14,4 +14,4 @@ Quick Start
 
     jubaclassifier --name=tutorial &
 
-    mvn compile exec:java -Dexec.mainClass=example.App
+    mvn -q compile exec:java -Dexec.mainClass=example.App
