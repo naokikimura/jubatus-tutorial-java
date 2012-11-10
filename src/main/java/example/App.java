@@ -12,8 +12,10 @@ import org.json.simple.parser.ParseException;
 import us.jubat.classifier.*;
 
 /**
- * Hello world!
- *
+ * <p>
+ * see <a href="https://github.com/jubatus/jubatus-tutorial-python/blob/master/tutorial.py">jubatus / jubatus-tutorial-python / tutorial.py</a>
+ * </p>
+ * 
  * @author <a href="https://github.com/naokikimura">naokikimura</a>
  */
 public class App {
