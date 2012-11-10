@@ -46,8 +46,8 @@ public class App {
 
         client.set_config(name, conf);
 
-        printConfig(System.out, client, name);
-        printStatus(System.out, client, name);
+        printConfig(System.err, client, name);
+        printStatus(System.err, client, name);
 
         train(client, name, App.class.getResource("train.dat"));
 
@@ -55,7 +55,7 @@ public class App {
         client.load(name, id);
 
         client.set_config(name, conf);
-        printConfig(System.out, client, name);
+        printConfig(System.err, client, name);
 
         classify(client, name, App.class.getResource("test.dat"));
 
@@ -80,7 +80,7 @@ public class App {
                 trainDatum.first = label;
                 trainDatum.second = datum;
                 client.train(name, Arrays.asList(new TupleStringDatum[]{trainDatum}));
-                printStatus(System.out, client, name);
+                printStatus(System.err, client, name);
             }
         } finally {
             IOUtils.closeQuietly(is);
