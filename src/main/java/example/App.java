@@ -29,7 +29,7 @@ public class App {
         if (cl.hasOption("h")) {
             HelpFormatter help = new HelpFormatter();
             help.printHelp(App.class.getName(), options, true);
-            System.exit(0);
+            return;
         }
 
         String id = "tutorial";
@@ -58,8 +58,6 @@ public class App {
         printConfig(System.err, client, name);
 
         classify(client, name, App.class.getResource("test.dat"));
-
-        System.exit(0);
     }
 
     private static void train(ClassifierClient client, String name, URL url) throws IOException {
