@@ -39,25 +39,28 @@ public class App {
         int port = Integer.parseInt(cl.getOptionValue("p", "9199"));
         double timeout_sec = 10.0;
         ClassifierClient client = new ClassifierClient(host, port, timeout_sec);
+        try {
+            ConfigData conf = new ConfigData();
+            conf.method = cl.getOptionValue("a", "PA");
+            conf.config = loadConfig(App.class.getResource("config.json")).toString();
 
-        ConfigData conf = new ConfigData();
-        conf.method = cl.getOptionValue("a", "PA");
-        conf.config = loadConfig(App.class.getResource("config.json")).toString();
+            client.set_config(name, conf);
 
-        client.set_config(name, conf);
+            printConfig(System.err, client, name);
+            printStatus(System.err, client, name);
 
-        printConfig(System.err, client, name);
-        printStatus(System.err, client, name);
+            train(client, name, App.class.getResource("train.dat"));
 
-        train(client, name, App.class.getResource("train.dat"));
+            client.save(name, id);
+            client.load(name, id);
 
-        client.save(name, id);
-        client.load(name, id);
+            client.set_config(name, conf);
+            printConfig(System.err, client, name);
 
-        client.set_config(name, conf);
-        printConfig(System.err, client, name);
-
-        classify(client, name, App.class.getResource("test.dat"));
+            classify(client, name, App.class.getResource("test.dat"));
+        } finally {
+            client.close();
+        }
     }
 
     private static void train(ClassifierClient client, String name, URL url) throws IOException {
