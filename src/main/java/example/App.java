@@ -76,11 +76,11 @@ public class App {
                 if (resource == null) {
                     throw new FileNotFoundException("not found " + file);
                 }
-                Datum datum = loadDatum(resource);
+                Datum datum = createDatum(loadMessage(resource));
                 TupleStringDatum trainDatum = new TupleStringDatum();
                 trainDatum.first = label;
                 trainDatum.second = datum;
-                client.train(name, Arrays.asList(new TupleStringDatum[]{trainDatum}));
+                client.train(name, Arrays.asList(trainDatum));
                 printStatus(System.err, client, name);
             }
         } finally {
@@ -101,9 +101,9 @@ public class App {
                 if (resource == null) {
                     throw new FileNotFoundException("not found " + file);
                 }
-                Datum datum = loadDatum(resource);
-                List ans = client.classify(name, Arrays.asList(datum));
-                EstimateResult estm = getMostLikely((List) ans.get(0));
+                Datum datum = createDatum(loadMessage(resource));
+                List<List<EstimateResult>> ans = client.classify(name, Arrays.asList(datum));
+                EstimateResult estm = getMostLikely(ans.get(0));
                 String result = label.equals(estm.label) ? "OK" : "NG";
                 System.out.printf("%s,%s,%s,%f%n", 
                         result, label, estm.label, estm.prob);
@@ -113,20 +113,21 @@ public class App {
         }
     }
 
-    private static Datum loadDatum(URL url) throws IOException {
+    private static Datum createDatum(String message) throws IOException {
+        TupleStringString stringValue = new TupleStringString();
+        stringValue.first = "message";
+        stringValue.second = message;
+
+        Datum datum = new Datum();
+        datum.string_values = Arrays.asList(stringValue);
+        datum.num_values = Collections.<TupleStringDouble>emptyList();
+        return datum;
+    }
+
+    private static String loadMessage(URL url) throws IOException {
         InputStream is = url.openStream();
         try {
-            String message = IOUtils.toString(is);
-
-            TupleStringString stringValue = new TupleStringString();
-            stringValue.first = "message";
-            stringValue.second = message;
-
-            Datum datum = new Datum();
-            datum.string_values = Arrays.asList(stringValue);
-            datum.num_values = Collections.<TupleStringDouble>emptyList();
-
-            return datum;
+            return IOUtils.toString(is);
         } finally {
             IOUtils.closeQuietly(is);
         }
