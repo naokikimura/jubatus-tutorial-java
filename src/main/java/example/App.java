@@ -19,6 +19,10 @@ import us.jubat.classifier.*;
  * @author <a href="https://github.com/naokikimura">naokikimura</a>
  */
 public class App {
+    public static final String DEFAULT_ALGORITHM = "PA";
+    public static final String DEFAULT_INSTANCE_NAME = "tutorial";
+    public static final String DEFAULT_SERVER_HOST = "127.0.0.1";
+    public static final String DEFAULT_SERVER_PORT = "9199";
 
     public static void main(String[] args) throws Exception {
         Options options = buildOptions();
@@ -26,22 +30,22 @@ public class App {
         CommandLineParser parser = new PosixParser();
         CommandLine cl = parser.parse(options, args);
 
-        if (cl.hasOption("h")) {
+        if (cl.hasOption("?")) {
             HelpFormatter help = new HelpFormatter();
             help.printHelp(App.class.getName(), options, true);
             return;
         }
 
         String id = "tutorial";
-        String name = cl.getOptionValue("n", "tutorial");
+        String name = cl.getOptionValue("n", DEFAULT_INSTANCE_NAME);
 
-        String host = cl.getOptionValue("s", "127.0.0.1");
-        int port = Integer.parseInt(cl.getOptionValue("p", "9199"));
+        String host = cl.getOptionValue("s", DEFAULT_SERVER_HOST);
+        int port = Integer.parseInt(cl.getOptionValue("p", DEFAULT_SERVER_PORT));
         double timeout_sec = 10.0;
         ClassifierClient client = new ClassifierClient(host, port, timeout_sec);
         try {
             ConfigData conf = new ConfigData();
-            conf.method = cl.getOptionValue("a", "PA");
+            conf.method = cl.getOptionValue("a", DEFAULT_ALGORITHM);
             conf.config = loadConverter(App.class.getResource("converter.json")).toString();
 
             client.set_config(name, conf);
@@ -146,27 +150,34 @@ public class App {
     private static Options buildOptions() throws IllegalArgumentException {
         Options options = new Options();
         
-        options.addOption(OptionBuilder.create('h'));
+        OptionBuilder.withDescription("Display help information");
+        OptionBuilder.withArgName("help");
+        OptionBuilder.withLongOpt("help");
+        options.addOption(OptionBuilder.create('?'));
 
-        OptionBuilder.withDescription("server_ip");
-        OptionBuilder.withLongOpt("server ip");
+        OptionBuilder.withDescription("Server host (default: " + DEFAULT_SERVER_HOST + ")");
+        OptionBuilder.withArgName("host");
+        OptionBuilder.withLongOpt("server_host");
         OptionBuilder.withType(String.class);
         OptionBuilder.hasArg();
-        options.addOption(OptionBuilder.create("s"));
+        options.addOption(OptionBuilder.create("h"));
 
-        OptionBuilder.withDescription("server_port");
-        OptionBuilder.withLongOpt("server port");
+        OptionBuilder.withDescription("Server port (default: " + DEFAULT_SERVER_PORT + ")");
+        OptionBuilder.withArgName("port");
+        OptionBuilder.withLongOpt("server_port");
         OptionBuilder.withType(Number.class);
         OptionBuilder.hasArg();
         options.addOption(OptionBuilder.create("p"));
 
-        OptionBuilder.withDescription("name");
+        OptionBuilder.withDescription("Instance name (default: " + DEFAULT_INSTANCE_NAME + ")");
+        OptionBuilder.withArgName("name");
         OptionBuilder.withLongOpt("name");
         OptionBuilder.withType(String.class);
         OptionBuilder.hasArg();
         options.addOption(OptionBuilder.create("n"));
 
-        OptionBuilder.withDescription("algo");
+        OptionBuilder.withDescription("Algorithm (default: " + DEFAULT_ALGORITHM + ")");
+        OptionBuilder.withArgName("algorithm");
         OptionBuilder.withLongOpt("algo");
         OptionBuilder.withType(String.class);
         OptionBuilder.hasArg();
