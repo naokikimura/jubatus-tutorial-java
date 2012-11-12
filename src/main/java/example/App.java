@@ -42,7 +42,7 @@ public class App {
         try {
             ConfigData conf = new ConfigData();
             conf.method = cl.getOptionValue("a", "PA");
-            conf.config = loadConfig(App.class.getResource("config.json")).toString();
+            conf.config = loadConverter(App.class.getResource("converter.json")).toString();
 
             client.set_config(name, conf);
 
@@ -174,7 +174,7 @@ public class App {
         return options;
     }
 
-    private static JSONObject loadConfig(URL url) throws IOException, ParseException {
+    private static JSONObject loadConverter(URL url) throws IOException, ParseException {
         InputStream is = url.openStream();
         try {
             JSONParser jsonParser = new JSONParser();
