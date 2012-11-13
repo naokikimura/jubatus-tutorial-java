@@ -1,8 +1,12 @@
 package example;
 
-import java.io.*;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.*;
+import java.util.logging.Logger;
 import org.apache.commons.cli.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
@@ -24,9 +28,10 @@ public class App {
     public static final String DEFAULT_SERVER_HOST = "127.0.0.1";
     public static final String DEFAULT_SERVER_PORT = "9199";
 
+    private static final Logger LOGGER = Logger.getLogger(App.class.getName());
+
     public static void main(String[] args) throws Exception {
         Options options = buildOptions();
-
         CommandLineParser parser = new PosixParser();
         CommandLine cl = parser.parse(options, args);
 
@@ -50,8 +55,8 @@ public class App {
 
             client.set_config(name, conf);
 
-            printConfig(System.err, client, name);
-            printStatus(System.err, client, name);
+            LOGGER.config(toJSONString(client.get_config(name)));
+            LOGGER.fine(toJSONString(client.get_status(name)));
 
             train(client, name, App.class.getResource("train.dat"));
 
@@ -59,12 +64,22 @@ public class App {
             client.load(name, id);
 
             client.set_config(name, conf);
-            printConfig(System.err, client, name);
+            LOGGER.config(toJSONString(client.get_config(name)));
 
             classify(client, name, App.class.getResource("test.dat"));
         } finally {
             client.close();
         }
+    }
+
+    private static String toJSONString(Map<String, Map<String, String>> status) {
+        return JSONObject.toJSONString(status);
+    }
+
+    private static String toJSONString(ConfigData conf) {
+        return String.format(
+                "{\"method\":\"%s\",\"config\":%s}", 
+                conf.method, conf.config);
     }
 
     private static void train(ClassifierClient client, String name, URL url) throws IOException {
@@ -85,7 +100,7 @@ public class App {
                 trainDatum.first = label;
                 trainDatum.second = datum;
                 client.train(name, Arrays.asList(trainDatum));
-                printStatus(System.err, client, name);
+                LOGGER.fine(toJSONString(client.get_status(name)));
             }
         } finally {
             IOUtils.closeQuietly(is);
@@ -117,7 +132,7 @@ public class App {
         }
     }
 
-    private static Datum createDatum(String message) throws IOException {
+    private static Datum createDatum(String message) {
         TupleStringString stringValue = new TupleStringString();
         stringValue.first = "message";
         stringValue.second = message;
@@ -147,7 +162,7 @@ public class App {
         });
     }
 
-    private static Options buildOptions() throws IllegalArgumentException {
+    private static Options buildOptions() {
         Options options = new Options();
         
         OptionBuilder.withDescription("Display help information");
@@ -194,15 +209,5 @@ public class App {
         } finally {
             IOUtils.closeQuietly(is);
         }
-    }
-
-    private static void printStatus(PrintStream out, ClassifierClient client, String name) {
-        Map status = client.get_status(name);
-        out.println(JSONObject.toJSONString(status));
-    }
-
-    private static void printConfig(PrintStream out, ClassifierClient client, String name) {
-        ConfigData conf = client.get_config(name);
-        out.println(String.format("{\"method\":\"%s\",\"config\":%s}", conf.method, conf.config));
     }
 }
