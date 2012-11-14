@@ -47,8 +47,7 @@ public class App {
         String host = cl.getOptionValue("s", DEFAULT_SERVER_HOST);
         int port = Integer.parseInt(cl.getOptionValue("p", DEFAULT_SERVER_PORT));
         double timeout_sec = 10.0;
-        ClassifierClient client = new ClassifierClient(host, port, timeout_sec);
-        try {
+        try (ClassifierClient client = new ClassifierClient(host, port, timeout_sec)) {
             ConfigData conf = new ConfigData();
             conf.method = cl.getOptionValue("a", DEFAULT_ALGORITHM);
             conf.config = loadConverter(App.class.getResource("converter.json")).toString();
@@ -67,8 +66,6 @@ public class App {
             LOGGER.config(toJSONString(client.get_config(name)));
 
             classify(client, name, App.class.getResource("test.dat"));
-        } finally {
-            client.close();
         }
     }
 

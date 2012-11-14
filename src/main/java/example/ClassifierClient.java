@@ -18,7 +18,7 @@ import us.jubat.classifier.TupleStringDatum;
  * @see us.jubat.classifier.ClassifierClient
  * @author <a href="https://github.com/naokikimura">naokikimura</a>
  */
-class ClassifierClient {
+class ClassifierClient implements AutoCloseable {
     private Client client;
     private RPCInterface proxy;
 
@@ -56,9 +56,8 @@ class ClassifierClient {
         return proxy.get_status(name);
     }
 
-    void close() {
+    public void close() {
         client.getEventLoop().shutdown();
         client.close();
     }
-    
 }
