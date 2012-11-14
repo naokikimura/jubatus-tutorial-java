@@ -5,7 +5,7 @@
 
     <groupId>example</groupId>
     <artifactId>jubatus-tutorial-java</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
     <packaging>jar</packaging>
 
     <name>jubatus-tutorial-java</name>
