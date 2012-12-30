@@ -15,3 +15,16 @@ Quick Start
     jubaclassifier --rpc-port=9190 --name=tutorial &
 
     mvn -q compile exec:java -Dexec.args="-p 9190"
+
+Output a classpath string of dependencies
+--------------------
+
+    mvn dependency:build-classpath -DoutputFile=classpath.txt
+
+or
+
+    mvn -q exec:exec -Dexec.executable="echo" -Dexec.args="%classpath"
+
+###  e.g. jrunscript
+
+    rlwrap jrunscript -cp $(mvn -q exec:exec -Dexec.executable="echo" -Dexec.args="%classpath")
