@@ -19,7 +19,7 @@ import us.jubat.classifier.*;
  * <p>
  * see <a href="https://github.com/jubatus/jubatus-tutorial-python/blob/master/tutorial.py">jubatus / jubatus-tutorial-python / tutorial.py</a>
  * </p>
- * 
+ *
  * @author <a href="https://github.com/naokikimura">naokikimura</a>
  */
 public class App {
@@ -75,13 +75,14 @@ public class App {
 
     private static String toJSONString(ConfigData conf) {
         return String.format(
-                "{\"method\":\"%s\",\"config\":%s}", 
+                "{\"method\":\"%s\",\"config\":%s}",
                 conf.method, conf.config);
     }
 
     private static void train(ClassifierClient client, String name, URL url) throws IOException {
         InputStream is = url.openStream();
         try {
+            DatumBuilder builder = new DatumBuilder();
             LineIterator it = IOUtils.lineIterator(is, "UTF-8");
             while (it.hasNext()) {
                 String[] row = it.nextLine().split(",", 2);
@@ -92,7 +93,7 @@ public class App {
                 if (resource == null) {
                     throw new FileNotFoundException("not found " + file);
                 }
-                Datum datum = createDatum(loadMessage(resource));
+                Datum datum = builder.setTuple("message", loadMessage(resource)).create();
                 TupleStringDatum trainDatum = new TupleStringDatum();
                 trainDatum.first = label;
                 trainDatum.second = datum;
@@ -107,6 +108,7 @@ public class App {
     private static void classify(ClassifierClient client, String name, URL url) throws IOException {
         InputStream is = url.openStream();
         try {
+            DatumBuilder builder = new DatumBuilder();
             LineIterator it = IOUtils.lineIterator(is, "UTF-8");
             while (it.hasNext()) {
                 String[] row = it.nextLine().split(",", 2);
@@ -117,27 +119,86 @@ public class App {
                 if (resource == null) {
                     throw new FileNotFoundException("not found " + file);
                 }
-                Datum datum = createDatum(loadMessage(resource));
+                Datum datum = builder.setTuple("message", loadMessage(resource)).create();
                 List<List<EstimateResult>> ans = client.classify(name, Arrays.asList(datum));
-                EstimateResult estm = getMostLikely(ans.get(0));
-                String result = label.equals(estm.label) ? "OK" : "NG";
-                System.out.printf("%s,%s,%s,%f%n", 
-                        result, label, estm.label, estm.prob);
+                for (List<EstimateResult> e : ans) {
+                    EstimateResult estm = getMostLikely(e);
+                    String result = label.equals(estm.label) ? "OK" : "NG";
+                    System.out.printf("%s,%s,%s,%f%n",
+                            result, label, estm.label, estm.prob);
+                }
             }
         } finally {
             IOUtils.closeQuietly(is);
         }
     }
 
-    private static Datum createDatum(String message) {
-        TupleStringString stringValue = new TupleStringString();
-        stringValue.first = "message";
-        stringValue.second = message;
+    static class DatumBuilder {
+        List<TupleStringString> strings = new ArrayList<TupleStringString>();
+        List<TupleStringDouble> nums = new ArrayList<TupleStringDouble>();
 
-        Datum datum = new Datum();
-        datum.string_values = Arrays.asList(stringValue);
-        datum.num_values = Collections.<TupleStringDouble>emptyList();
-        return datum;
+        Datum create() {
+            Datum datum = new Datum();
+            datum.num_values = nums;
+            datum.string_values = strings;
+            return datum;
+        }
+
+        DatumBuilder reset() {
+            strings.clear();
+            nums.clear();
+            return this;
+        }
+
+        static TupleStringDouble createTuple(String first, double second) {
+            TupleStringDouble tuple = new TupleStringDouble();
+            tuple.first = first;
+            tuple.second = second;
+            return tuple;
+        }
+
+        static TupleStringString createTuple(String first, String second) {
+            TupleStringString tuple = new TupleStringString();
+            tuple.first = first;
+            tuple.second = second;
+            return tuple;
+        }
+
+        DatumBuilder addTuple(String first, String second) {
+            return add(createTuple(first, second));
+        }
+
+        DatumBuilder add(TupleStringString... tuple) {
+            Collections.addAll(strings, tuple);
+            return this;
+        }
+
+        DatumBuilder setTuple(String first, String second) {
+            return set(createTuple(first, second));
+        }
+
+        DatumBuilder set(TupleStringString... tuple) {
+            strings.clear();
+            return add(tuple);
+        }
+
+        DatumBuilder addTuple(String first, double second) {
+            return add(createTuple(first, second));
+        }
+
+        DatumBuilder add(TupleStringDouble... tuple) {
+            Collections.addAll(nums, tuple);
+            return this;
+        }
+
+        DatumBuilder setTuple(String first, double second) {
+            return set(createTuple(first, second));
+        }
+
+        DatumBuilder set(TupleStringDouble... tuple) {
+            nums.clear();
+            return add(tuple);
+        }
     }
 
     private static String loadMessage(URL url) throws IOException {
@@ -161,7 +222,7 @@ public class App {
 
     private static Options buildOptions() {
         Options options = new Options();
-        
+
         OptionBuilder.withDescription("Display help information");
         OptionBuilder.withArgName("help");
         OptionBuilder.withLongOpt("help");
