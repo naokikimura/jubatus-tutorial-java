@@ -1,5 +1,7 @@
 package example;
 
+import example.classifier.ClassifierClient;
+import example.classifier.util.DatumBuilder;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,7 +15,10 @@ import org.apache.commons.io.LineIterator;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import us.jubat.classifier.*;
+import us.jubat.classifier.ConfigData;
+import us.jubat.classifier.Datum;
+import us.jubat.classifier.EstimateResult;
+import us.jubat.classifier.TupleStringDatum;
 
 /**
  * <p>
@@ -94,10 +99,10 @@ public class App {
                     throw new FileNotFoundException("not found " + file);
                 }
                 Datum datum = builder.setTuple("message", loadMessage(resource)).create();
-                TupleStringDatum trainDatum = new TupleStringDatum();
-                trainDatum.first = label;
-                trainDatum.second = datum;
-                client.train(name, Arrays.asList(trainDatum));
+                TupleStringDatum tuple = new TupleStringDatum();
+                tuple.first = label;
+                tuple.second = datum;
+                client.train(name, Arrays.asList(tuple));
                 LOGGER.fine(toJSONString(client.get_status(name)));
             }
         } finally {
@@ -130,74 +135,6 @@ public class App {
             }
         } finally {
             IOUtils.closeQuietly(is);
-        }
-    }
-
-    static class DatumBuilder {
-        List<TupleStringString> strings = new ArrayList<TupleStringString>();
-        List<TupleStringDouble> nums = new ArrayList<TupleStringDouble>();
-
-        Datum create() {
-            Datum datum = new Datum();
-            datum.num_values = nums;
-            datum.string_values = strings;
-            return datum;
-        }
-
-        DatumBuilder reset() {
-            strings.clear();
-            nums.clear();
-            return this;
-        }
-
-        static TupleStringDouble createTuple(String first, double second) {
-            TupleStringDouble tuple = new TupleStringDouble();
-            tuple.first = first;
-            tuple.second = second;
-            return tuple;
-        }
-
-        static TupleStringString createTuple(String first, String second) {
-            TupleStringString tuple = new TupleStringString();
-            tuple.first = first;
-            tuple.second = second;
-            return tuple;
-        }
-
-        DatumBuilder addTuple(String first, String second) {
-            return add(createTuple(first, second));
-        }
-
-        DatumBuilder add(TupleStringString... tuple) {
-            Collections.addAll(strings, tuple);
-            return this;
-        }
-
-        DatumBuilder setTuple(String first, String second) {
-            return set(createTuple(first, second));
-        }
-
-        DatumBuilder set(TupleStringString... tuple) {
-            strings.clear();
-            return add(tuple);
-        }
-
-        DatumBuilder addTuple(String first, double second) {
-            return add(createTuple(first, second));
-        }
-
-        DatumBuilder add(TupleStringDouble... tuple) {
-            Collections.addAll(nums, tuple);
-            return this;
-        }
-
-        DatumBuilder setTuple(String first, double second) {
-            return set(createTuple(first, second));
-        }
-
-        DatumBuilder set(TupleStringDouble... tuple) {
-            nums.clear();
-            return add(tuple);
         }
     }
 
