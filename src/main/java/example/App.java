@@ -22,7 +22,8 @@ import us.jubat.classifier.TupleStringDatum;
 
 /**
  * <p>
- * see <a href="https://github.com/jubatus/jubatus-tutorial-python/blob/master/tutorial.py">jubatus / jubatus-tutorial-python / tutorial.py</a>
+ * see <a href="https://github.com/jubatus/jubatus-tutorial-python/blob/master/tutorial.py">
+ *  jubatus / jubatus-tutorial-python / tutorial.py</a>
  * </p>
  *
  * @author <a href="https://github.com/naokikimura">naokikimura</a>
