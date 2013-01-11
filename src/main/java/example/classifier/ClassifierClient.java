@@ -9,7 +9,6 @@ import java.util.Map;
 import org.msgpack.rpc.Client;
 import org.msgpack.rpc.loop.EventLoop;
 import us.jubat.classifier.ClassifierClient.RPCInterface;
-import us.jubat.classifier.ConfigData;
 import us.jubat.classifier.Datum;
 import us.jubat.classifier.EstimateResult;
 import us.jubat.classifier.TupleStringDatum;
@@ -28,11 +27,7 @@ public class ClassifierClient implements AutoCloseable {
         proxy = client.proxy(RPCInterface.class);
     }
 
-    public boolean set_config(String name, ConfigData c) {
-        return proxy.set_config(name, c);
-    }
-
-    public ConfigData get_config(String name) {
+    public String get_config(String name) {
         return proxy.get_config(name);
     }
 

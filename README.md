@@ -12,7 +12,7 @@ Quick Start
     curl -O http://people.csail.mit.edu/jrennie/20Newsgroups/20news-bydate.tar.gz
     tar -xvzf 20news-bydate.tar.gz -C src/main/resources/example/
 
-    jubaclassifier --rpc-port=9190 --name=tutorial &
+    jubaclassifier --configpath=src/main/config/config.json --rpc-port=9190 --name=tutorial &
 
     mvn -q compile exec:java -Dexec.args="-p 9190"
 

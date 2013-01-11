@@ -15,7 +15,6 @@ import org.apache.commons.io.LineIterator;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import us.jubat.classifier.ConfigData;
 import us.jubat.classifier.Datum;
 import us.jubat.classifier.EstimateResult;
 import us.jubat.classifier.TupleStringDatum;
@@ -54,13 +53,8 @@ public class App {
         int port = Integer.parseInt(cl.getOptionValue("p", DEFAULT_SERVER_PORT));
         double timeout_sec = 10.0;
         try (ClassifierClient client = new ClassifierClient(host, port, timeout_sec)) {
-            ConfigData conf = new ConfigData();
-            conf.method = cl.getOptionValue("a", DEFAULT_ALGORITHM);
-            conf.config = loadConverter(App.class.getResource("converter.json")).toString();
 
-            client.set_config(name, conf);
-
-            LOGGER.config(toJSONString(client.get_config(name)));
+            LOGGER.config(client.get_config(name));
             LOGGER.fine(toJSONString(client.get_status(name)));
 
             train(client, name, App.class.getResource("train.dat"));
@@ -68,21 +62,12 @@ public class App {
             client.save(name, id);
             client.load(name, id);
 
-            client.set_config(name, conf);
-            LOGGER.config(toJSONString(client.get_config(name)));
-
             classify(client, name, App.class.getResource("test.dat"));
         }
     }
 
     private static String toJSONString(Map<String, Map<String, String>> status) {
         return JSONObject.toJSONString(status);
-    }
-
-    private static String toJSONString(ConfigData conf) {
-        return String.format(
-                "{\"method\":\"%s\",\"config\":%s}",
-                conf.method, conf.config);
     }
 
     private static void train(ClassifierClient client, String name, URL url) throws IOException {
@@ -131,7 +116,7 @@ public class App {
                     EstimateResult estm = getMostLikely(e);
                     String result = label.equals(estm.label) ? "OK" : "NG";
                     System.out.printf("%s,%s,%s,%f%n",
-                            result, label, estm.label, estm.prob);
+                            result, label, estm.label, estm.score);
                 }
             }
         } finally {
@@ -153,7 +138,7 @@ public class App {
 
             @Override
             public int compare(EstimateResult o1, EstimateResult o2) {
-                return o1.prob == o2.prob ? 0 : o1.prob < o2.prob ? -1 : 1;
+                return o1.score == o2.score ? 0 : o1.score < o2.score ? -1 : 1;
             }
         });
     }
@@ -186,13 +171,6 @@ public class App {
         OptionBuilder.withType(String.class);
         OptionBuilder.hasArg();
         options.addOption(OptionBuilder.create("n"));
-
-        OptionBuilder.withDescription("Algorithm (default: " + DEFAULT_ALGORITHM + ")");
-        OptionBuilder.withArgName("algorithm");
-        OptionBuilder.withLongOpt("algo");
-        OptionBuilder.withType(String.class);
-        OptionBuilder.hasArg();
-        options.addOption(OptionBuilder.create("a"));
 
         return options;
     }
