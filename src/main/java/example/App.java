@@ -59,8 +59,10 @@ public class App {
 
             train(client, name, App.class.getResource("train.dat"));
 
+            LOGGER.fine(toJSONString(client.get_status(name)));
             client.save(name, id);
             client.load(name, id);
+            LOGGER.config(client.get_config(name));
 
             classify(client, name, App.class.getResource("test.dat"));
         }
@@ -71,56 +73,57 @@ public class App {
     }
 
     private static void train(ClassifierClient client, String name, URL url) throws IOException {
-        InputStream is = url.openStream();
-        try {
-            DatumBuilder builder = new DatumBuilder();
-            LineIterator it = IOUtils.lineIterator(is, "UTF-8");
-            while (it.hasNext()) {
-                String[] row = it.nextLine().split(",", 2);
-                String label = row[0];
-                String file = row[1];
+        try(InputStream is = url.openStream()) {
+            train(client, name, is);
+        }
+    }
 
-                URL resource = App.class.getResource(file);
-                if (resource == null) {
-                    throw new FileNotFoundException("not found " + file);
-                }
-                Datum datum = builder.setTuple("message", loadMessage(resource)).create();
-                TupleStringDatum tuple = new TupleStringDatum();
-                tuple.first = label;
-                tuple.second = datum;
-                client.train(name, Arrays.asList(tuple));
-                LOGGER.fine(toJSONString(client.get_status(name)));
+    private static void train(ClassifierClient client, String name, InputStream is) throws IOException {
+        DatumBuilder builder = new DatumBuilder();
+        LineIterator it = IOUtils.lineIterator(is, "UTF-8");
+        while (it.hasNext()) {
+            String[] row = it.nextLine().split(",", 2);
+            String label = row[0];
+            String file = row[1];
+
+            URL resource = App.class.getResource(file);
+            if (resource == null) {
+                throw new FileNotFoundException("not found " + file);
             }
-        } finally {
-            IOUtils.closeQuietly(is);
+            Datum datum = builder.setTuple("message", loadMessage(resource)).create();
+            TupleStringDatum tuple = new TupleStringDatum();
+            tuple.first = label;
+            tuple.second = datum;
+            client.train(name, Arrays.asList(tuple));
         }
     }
 
     private static void classify(ClassifierClient client, String name, URL url) throws IOException {
-        InputStream is = url.openStream();
-        try {
-            DatumBuilder builder = new DatumBuilder();
-            LineIterator it = IOUtils.lineIterator(is, "UTF-8");
-            while (it.hasNext()) {
-                String[] row = it.nextLine().split(",", 2);
-                String label = row[0];
-                String file = row[1];
+        try(InputStream is = url.openStream()) {
+            classify(client, name, is);
+        }
+    }
 
-                URL resource = App.class.getResource(file);
-                if (resource == null) {
-                    throw new FileNotFoundException("not found " + file);
-                }
-                Datum datum = builder.setTuple("message", loadMessage(resource)).create();
-                List<List<EstimateResult>> ans = client.classify(name, Arrays.asList(datum));
-                for (List<EstimateResult> e : ans) {
-                    EstimateResult estm = getMostLikely(e);
-                    String result = label.equals(estm.label) ? "OK" : "NG";
-                    System.out.printf("%s,%s,%s,%f%n",
-                            result, label, estm.label, estm.score);
-                }
+    private static void classify(ClassifierClient client, String name, InputStream is) throws IOException {
+        DatumBuilder builder = new DatumBuilder();
+        LineIterator it = IOUtils.lineIterator(is, "UTF-8");
+        while (it.hasNext()) {
+            String[] row = it.nextLine().split(",", 2);
+            String label = row[0];
+            String file = row[1];
+
+            URL resource = App.class.getResource(file);
+            if (resource == null) {
+                throw new FileNotFoundException("not found " + file);
             }
-        } finally {
-            IOUtils.closeQuietly(is);
+            Datum datum = builder.setTuple("message", loadMessage(resource)).create();
+            List<List<EstimateResult>> ans = client.classify(name, Arrays.asList(datum));
+            for (List<EstimateResult> e : ans) {
+                EstimateResult estm = getMostLikely(e);
+                String result = label.equals(estm.label) ? "OK" : "NG";
+                System.out.printf("%s,%s,%s,%f%n",
+                        result, label, estm.label, estm.score);
+            }
         }
     }
 
