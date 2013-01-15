@@ -5,7 +5,6 @@ import example.classifier.util.DatumBuilder;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.*;
 import java.util.logging.Logger;
@@ -13,8 +12,6 @@ import org.apache.commons.cli.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import us.jubat.classifier.Datum;
 import us.jubat.classifier.EstimateResult;
 import us.jubat.classifier.TupleStringDatum;
@@ -128,11 +125,8 @@ public class App {
     }
 
     private static String loadMessage(URL url) throws IOException {
-        InputStream is = url.openStream();
-        try {
+        try(InputStream is = url.openStream()) {
             return IOUtils.toString(is);
-        } finally {
-            IOUtils.closeQuietly(is);
         }
     }
 
@@ -176,15 +170,5 @@ public class App {
         options.addOption(OptionBuilder.create("n"));
 
         return options;
-    }
-
-    private static JSONObject loadConverter(URL url) throws IOException, ParseException {
-        InputStream is = url.openStream();
-        try {
-            JSONParser jsonParser = new JSONParser();
-            return (JSONObject) jsonParser.parse(new InputStreamReader(is));
-        } finally {
-            IOUtils.closeQuietly(is);
-        }
     }
 }
