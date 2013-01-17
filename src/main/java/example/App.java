@@ -25,7 +25,6 @@ import us.jubat.classifier.TupleStringDatum;
  * @author <a href="https://github.com/naokikimura">naokikimura</a>
  */
 public class App {
-    public static final String DEFAULT_ALGORITHM = "PA";
     public static final String DEFAULT_INSTANCE_NAME = "tutorial";
     public static final String DEFAULT_SERVER_HOST = "127.0.0.1";
     public static final String DEFAULT_SERVER_PORT = "9199";
@@ -131,6 +130,13 @@ public class App {
     }
 
     private static EstimateResult getMostLikely(List<EstimateResult> EstimateResults) {
+        if (EstimateResults.isEmpty()) {
+            EstimateResult result = new EstimateResult();
+            result.label = "";
+            result.score = 0;
+            return result;
+        }
+
         return Collections.max(EstimateResults, new Comparator<EstimateResult>() {
 
             @Override
