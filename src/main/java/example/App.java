@@ -3,6 +3,7 @@ package example;
 import example.classifier.ClassifierClient;
 import example.classifier.util.DatumBuilder;
 import java.io.FileNotFoundException;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -53,19 +54,23 @@ public class App {
             LOGGER.config(client.get_config(name));
             LOGGER.fine(toJSONString(client.get_status(name)));
 
-            train(client, name, App.class.getResource("train.dat"));
+            train(client, name, new File("train.dat"));
 
             LOGGER.fine(toJSONString(client.get_status(name)));
             client.save(name, id);
             client.load(name, id);
             LOGGER.config(client.get_config(name));
 
-            classify(client, name, App.class.getResource("test.dat"));
+            classify(client, name, new File("test.dat"));
         }
     }
 
     private static String toJSONString(Map<String, Map<String, String>> status) {
         return JSONObject.toJSONString(status);
+    }
+
+    private static void train(ClassifierClient client, String name, File file) throws IOException {
+        train(client, name, file.toURL());
     }
 
     private static void train(ClassifierClient client, String name, URL url) throws IOException {
@@ -80,9 +85,9 @@ public class App {
         while (it.hasNext()) {
             String[] row = it.nextLine().split(",", 2);
             String label = row[0];
-            String file = row[1];
+            File file = new File(row[1]);
 
-            URL resource = App.class.getResource(file);
+            URL resource = file.toURL();
             if (resource == null) {
                 throw new FileNotFoundException("not found " + file);
             }
@@ -92,6 +97,10 @@ public class App {
             tuple.second = datum;
             client.train(name, Arrays.asList(tuple));
         }
+    }
+
+    private static void classify(ClassifierClient client, String name, File file) throws IOException {
+        classify(client, name, file.toURL());
     }
 
     private static void classify(ClassifierClient client, String name, URL url) throws IOException {
@@ -106,9 +115,9 @@ public class App {
         while (it.hasNext()) {
             String[] row = it.nextLine().split(",", 2);
             String label = row[0];
-            String file = row[1];
+            File file = new File(row[1]);
 
-            URL resource = App.class.getResource(file);
+            URL resource = file.toURL();
             if (resource == null) {
                 throw new FileNotFoundException("not found " + file);
             }

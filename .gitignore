@@ -1,6 +1,6 @@
 target/
 .DS_Store
-/src/main/resources/example/20news-bydate-test/
-/src/main/resources/example/20news-bydate-train/
+20news-bydate-test/
+20news-bydate-train/
 nb-configuration.xml
 nbactions.xml
