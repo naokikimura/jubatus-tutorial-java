@@ -2,8 +2,8 @@ package example;
 
 import example.classifier.ClassifierClient;
 import example.classifier.util.DatumBuilder;
-import java.io.FileNotFoundException;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -70,7 +70,7 @@ public class App {
     }
 
     private static void train(ClassifierClient client, String name, File file) throws IOException {
-        train(client, name, file.toURL());
+        train(client, name, file.toURI().toURL());
     }
 
     private static void train(ClassifierClient client, String name, URL url) throws IOException {
@@ -87,11 +87,7 @@ public class App {
             String label = row[0];
             File file = new File(row[1]);
 
-            URL resource = file.toURL();
-            if (resource == null) {
-                throw new FileNotFoundException("not found " + file);
-            }
-            Datum datum = builder.setTuple("message", loadMessage(resource)).create();
+            Datum datum = builder.setTuple("message", loadMessage(file)).create();
             TupleStringDatum tuple = new TupleStringDatum();
             tuple.first = label;
             tuple.second = datum;
@@ -100,7 +96,7 @@ public class App {
     }
 
     private static void classify(ClassifierClient client, String name, File file) throws IOException {
-        classify(client, name, file.toURL());
+        classify(client, name, file.toURI().toURL());
     }
 
     private static void classify(ClassifierClient client, String name, URL url) throws IOException {
@@ -117,11 +113,7 @@ public class App {
             String label = row[0];
             File file = new File(row[1]);
 
-            URL resource = file.toURL();
-            if (resource == null) {
-                throw new FileNotFoundException("not found " + file);
-            }
-            Datum datum = builder.setTuple("message", loadMessage(resource)).create();
+            Datum datum = builder.setTuple("message", loadMessage(file)).create();
             List<List<EstimateResult>> ans = client.classify(name, Arrays.asList(datum));
             for (List<EstimateResult> e : ans) {
                 EstimateResult estm = getMostLikely(e);
@@ -130,6 +122,13 @@ public class App {
                         result, label, estm.label, estm.score);
             }
         }
+    }
+
+    private static String loadMessage(File file) throws IOException {
+        if (!file.exists()) {
+            throw new FileNotFoundException("not found " + file);
+        }
+        return loadMessage(file.toURI().toURL());
     }
 
     private static String loadMessage(URL url) throws IOException {
