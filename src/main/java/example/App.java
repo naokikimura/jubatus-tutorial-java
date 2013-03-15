@@ -1,6 +1,5 @@
 package example;
 
-import example.classifier.ClassifierClient;
 import example.classifier.util.DatumBuilder;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -13,6 +12,8 @@ import org.apache.commons.cli.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 import org.json.simple.JSONObject;
+import org.msgpack.rpc.Client;
+import us.jubat.classifier.ClassifierClient;
 import us.jubat.classifier.Datum;
 import us.jubat.classifier.EstimateResult;
 import us.jubat.classifier.TupleStringDatum;
@@ -26,10 +27,10 @@ import us.jubat.classifier.TupleStringDatum;
  * @author <a href="https://github.com/naokikimura">naokikimura</a>
  */
 public class App {
+
     public static final String DEFAULT_INSTANCE_NAME = "tutorial";
     public static final String DEFAULT_SERVER_HOST = "127.0.0.1";
     public static final String DEFAULT_SERVER_PORT = "9199";
-
     private static final Logger LOGGER = Logger.getLogger(App.class.getName());
 
     public static void main(String[] args) throws Exception {
@@ -49,8 +50,8 @@ public class App {
         String host = cl.getOptionValue("s", DEFAULT_SERVER_HOST);
         int port = Integer.parseInt(cl.getOptionValue("p", DEFAULT_SERVER_PORT));
         double timeout_sec = 10.0;
-        try (ClassifierClient client = new ClassifierClient(host, port, timeout_sec)) {
-
+        ClassifierClient client = new ClassifierClient(host, port, timeout_sec);
+        try {
             LOGGER.config(client.get_config(name));
             LOGGER.fine(toJSONString(client.get_status(name)));
 
@@ -62,6 +63,10 @@ public class App {
             LOGGER.config(client.get_config(name));
 
             classify(client, name, new File("test.dat"));
+        } finally {
+            try (Client rawClient = client.get_client()) {
+                rawClient.getEventLoop().shutdown();
+            }
         }
     }
 
@@ -74,7 +79,7 @@ public class App {
     }
 
     private static void train(ClassifierClient client, String name, URL url) throws IOException {
-        try(InputStream is = url.openStream()) {
+        try (InputStream is = url.openStream()) {
             train(client, name, is);
         }
     }
@@ -100,7 +105,7 @@ public class App {
     }
 
     private static void classify(ClassifierClient client, String name, URL url) throws IOException {
-        try(InputStream is = url.openStream()) {
+        try (InputStream is = url.openStream()) {
             classify(client, name, is);
         }
     }
@@ -132,7 +137,7 @@ public class App {
     }
 
     private static String loadMessage(URL url) throws IOException {
-        try(InputStream is = url.openStream()) {
+        try (InputStream is = url.openStream()) {
             return IOUtils.toString(is);
         }
     }
@@ -146,7 +151,6 @@ public class App {
         }
 
         return Collections.max(EstimateResults, new Comparator<EstimateResult>() {
-
             @Override
             public int compare(EstimateResult o1, EstimateResult o2) {
                 return o1.score == o2.score ? 0 : o1.score < o2.score ? -1 : 1;
